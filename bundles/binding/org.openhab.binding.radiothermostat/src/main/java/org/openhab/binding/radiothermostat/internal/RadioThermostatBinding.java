@@ -70,6 +70,8 @@ public class RadioThermostatBinding extends
 	public static final long DEFAULT_REFRESH_INTERVAL = 60000;
 	public static final String DEFAULT_DEVICE_UID = "default";
 
+	private static final String BINDING_NAME = "RadioThermostatBinding";
+
 	private static final Logger logger = LoggerFactory
 			.getLogger(RadioThermostatBinding.class);
 
@@ -131,8 +133,8 @@ public class RadioThermostatBinding extends
 			sendUpdate(configs, BindingType.hold, holdUpdate);
 			sendUpdate(configs, BindingType.fan, fanUpdate);
 		} catch (IOException e) {
-			logger.warn("Cannot communicate with " + proxy.getHost()
-					+ " (uid: " + deviceUid + ")");
+			logger.warn(BINDING_NAME + " cannot communicate with "
+					+ proxy.getHost() + " (uid: " + deviceUid + ")");
 		}
 	}
 
@@ -163,9 +165,16 @@ public class RadioThermostatBinding extends
 		}
 		RadioThermostatProxy proxy = proxies.get(config.getDeviceUid());
 		if (proxy == null) {
-			logger.error("Received command for unknown device uid '"
+			logger.error(BINDING_NAME
+					+ " received command for unknown device uid '"
 					+ config.getDeviceUid() + "'");
 			return;
+		}
+		
+		if (logger.isDebugEnabled()) {
+			logger.debug(BINDING_NAME + " processing command '" + command
+					+ "' of type '" + command.getClass().getSimpleName()
+					+ "' for item '" + itemName + "'");
 		}
 
 		try {
@@ -191,17 +200,16 @@ public class RadioThermostatBinding extends
 					float newTarget = adjAmt
 							+ proxy.getState().getTargetTemperature();
 					proxy.setTargetTemperature(newTarget);
+					// send new value as update
+					State newState = new DecimalType(newTarget);
+					eventPublisher.postUpdate(itemName, newState);
 				} else {
 					float temperature = Float.parseFloat(command.toString());
 					proxy.setTargetTemperature(temperature);
 				}
 			} else if (type == BindingType.hold) {
 				if (command instanceof OnOffType) {
-					if (command == OnOffType.ON) {
-						proxy.setHold(true);
-					} else {
-						proxy.setHold(false);
-					}
+					proxy.setHold(command == OnOffType.ON);
 				}
 			}
 		} catch (IOException e) {
@@ -231,6 +239,7 @@ public class RadioThermostatBinding extends
 	@Override
 	public void updated(Dictionary<String, ?> config)
 			throws ConfigurationException {
+		logger.debug(BINDING_NAME + " updated");
 		try {
 			// Process device configuration
 			if (config != null) {
@@ -265,12 +274,12 @@ public class RadioThermostatBinding extends
 
 	@Override
 	public void activate() {
-
+		logger.debug(BINDING_NAME + " activated");
 	}
 
 	@Override
 	public void deactivate() {
-
+		logger.debug(BINDING_NAME + " deactivated");
 	}
 
 }
