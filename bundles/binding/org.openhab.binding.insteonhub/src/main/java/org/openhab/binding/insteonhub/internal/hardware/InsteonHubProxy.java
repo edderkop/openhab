@@ -46,6 +46,11 @@ import org.openhab.binding.insteonhub.internal.util.InsteonHubBindingLogUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Insteon hub proxy used to control an insteon hub using HTTP
+ * 
+ * @author Eric Thill
+ */
 public class InsteonHubProxy {
 
 	private static final Logger logger = LoggerFactory
