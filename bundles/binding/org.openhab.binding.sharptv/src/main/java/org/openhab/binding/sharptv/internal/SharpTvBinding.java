@@ -38,7 +38,6 @@ import org.openhab.binding.sharptv.SharpTvBindingProvider;
 import org.openhab.binding.sharptv.internal.SharpTvBindingConfig.BindingType;
 import org.openhab.binding.sharptv.internal.hardware.SharpTvProxy;
 import org.openhab.core.binding.AbstractActiveBinding;
-import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.IncreaseDecreaseType;
 import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.library.types.PercentType;
@@ -67,6 +66,7 @@ public class SharpTvBinding extends
 	public static final String CONFIG_KEY_PASS = "pass";
 	public static final String DEFAULT_DEVICE_UID = "default";
 
+	private static final String BINDING_NAME = "SharpTvBinding";
 	private static final int MAX_VOLUME = 60;
 
 	private static final Logger logger = LoggerFactory
@@ -96,14 +96,26 @@ public class SharpTvBinding extends
 	protected void internalReceiveCommand(String itemName, Command command) {
 		SharpTvBindingConfig config = getConfigForItemName(itemName);
 		if (config == null) {
-			logger.error("Received command for unknown item '" + itemName + "'");
+			logger.error(BINDING_NAME + " received command for unknown item '"
+					+ itemName + "'");
 			return;
 		}
 		SharpTvProxy proxy = proxies.get(config.getDeviceUid());
 		if (proxy == null) {
-			logger.error("Received command for unknown device uid '"
+			logger.error(BINDING_NAME
+					+ " received command for unknown device uid '"
 					+ config.getDeviceUid() + "'");
 			return;
+		}
+		
+		if(command.toString().length() == 0) {
+			return;
+		}
+
+		if (logger.isDebugEnabled()) {
+			logger.debug(BINDING_NAME + " processing command '" + command
+					+ "' of type '" + command.getClass().getSimpleName()
+					+ "' for item '" + itemName + "'");
 		}
 
 		try {
@@ -112,26 +124,41 @@ public class SharpTvBinding extends
 				proxy.toggleAudioSelection();
 			} else if (type == BindingType.avMode) {
 				int value = Integer.parseInt(command.toString());
-				proxy.setAvMode(value);
+				if(value >= 0) {
+					proxy.setAvMode(value);
+					eventPublisher.postUpdate(itemName, new StringType("-1"));
+				}
 			} else if (type == BindingType.channelAnalog) {
 				int channel = Integer.parseInt(command.toString());
-				proxy.setChannelAnalog(channel);
+				if(channel >= 0) {
+					proxy.setChannelAnalog(channel);
+				}
 			} else if (type == BindingType.channelDigitalAir) {
 				int channel = Integer.parseInt(command.toString());
-				proxy.setChannelDigitalAir(channel);
+				if(channel >= 0) {
+					proxy.setChannelDigitalAir(channel);
+				}
 			} else if (type == BindingType.channelDigitalCableOnePart) {
 				int channel = Integer.parseInt(command.toString());
-				proxy.setChannelDigitalCableOnePart(channel);
+				if(channel >= 0) {
+					proxy.setChannelDigitalCableOnePart(channel);
+				}
 			} else if (type == BindingType.channelDigitalCableTwoPart) {
 				String channel = command.toString();
 				String[] split = channel.split(".");
 				if (split.length == 1) {
-					proxy.setChannelDigitalCableTwoPart(
-							Integer.parseInt(channel), 0);
-				} else {
-					proxy.setChannelDigitalCableTwoPart(
-							Integer.parseInt(split[0]),
-							Integer.parseInt(split[1]));
+					int channelPart1 = Integer.parseInt(split[0]);
+					if(channelPart1 >= 0) {
+						proxy.setChannelDigitalCableTwoPart(
+								channelPart1, 0);
+					}
+				} else if (split.length == 2) {
+					int channelPart1 = Integer.parseInt(split[0]);
+					int channelPart2 = Integer.parseInt(split[1]);
+					if(channelPart1 >= 0 && channelPart2 >= 0) {
+						proxy.setChannelDigitalCableTwoPart(
+								channelPart1, channelPart2);
+					}
 				}
 			} else if (type == BindingType.channelUpDown) {
 				if (command == IncreaseDecreaseType.INCREASE
@@ -145,13 +172,17 @@ public class SharpTvBinding extends
 				proxy.toggleClosedCaption();
 			} else if (type == BindingType.input) {
 				int input = Integer.parseInt(command.toString());
-				proxy.setInput(input);
+				if(input >= 0) {
+					proxy.setInput(input);
+					eventPublisher.postUpdate(itemName, new StringType("-1"));
+				}
 			} else if (type == BindingType.inputToggle) {
 				proxy.toggleInput();
 			} else if (type == BindingType.mute) {
 				if (command instanceof OnOffType) {
 					boolean mute = command == OnOffType.ON;
 					proxy.setMute(mute);
+					eventPublisher.postUpdate(itemName, UnDefType.UNDEF);
 				}
 			} else if (type == BindingType.muteToggle) {
 				proxy.toggleMute();
@@ -159,34 +190,44 @@ public class SharpTvBinding extends
 				if (command instanceof OnOffType) {
 					boolean power = command == OnOffType.ON;
 					proxy.setPower(power);
+					eventPublisher.postUpdate(itemName, UnDefType.UNDEF);
 				}
 			} else if (type == BindingType.remoteButton) {
 				int button = Integer.parseInt(command.toString());
-				proxy.pressRemoteButton(button);
+				if(button >= 0) {
+					proxy.pressRemoteButton(button);
+				}
 			} else if (type == BindingType.sendCommand) {
 				proxy.sendCommands(command.toString());
+				eventPublisher.postUpdate(itemName, new StringType(""));
 			} else if (type == BindingType.sleepTimer) {
 				int timerMode = Integer.parseInt(command.toString());
-				proxy.setSleepTimer(timerMode);
+				if(timerMode >= 0) {
+					proxy.setSleepTimer(timerMode);
+					eventPublisher.postUpdate(itemName, new StringType("-1"));
+				}
 			} else if (type == BindingType.surround) {
 				int surround = Integer.parseInt(command.toString());
-				proxy.setSurround(surround);
+				if(surround >= 0) {
+					proxy.setSurround(surround);
+					eventPublisher.postUpdate(itemName, new StringType("-1"));
+				}
 			} else if (type == BindingType.threeD) {
 				int mode = Integer.parseInt(command.toString());
-				proxy.set3DMode(mode);
+				if(mode >= 0) {
+					proxy.set3DMode(mode);
+					eventPublisher.postUpdate(itemName, new StringType("-1"));
+				}
 			} else if (type == BindingType.viewMode) {
 				int mode = Integer.parseInt(command.toString());
-				proxy.setViewMode(mode);
+				if(mode >= 0) {
+					proxy.setViewMode(mode);
+					eventPublisher.postUpdate(itemName, new StringType("-1"));
+				}
 			} else if (type == BindingType.volume) {
-				if (command instanceof DecimalType
-						|| command instanceof StringType) {
-					int volume = Integer.parseInt(command.toString());
-					proxy.setVolume(volume);
-				} else if (command instanceof PercentType) {
-					float percent = .01f * ((PercentType) command).byteValue();
-					proxy.setVolume((int) (MAX_VOLUME * percent));
-				} else if (command instanceof IncreaseDecreaseType
+				if (command instanceof IncreaseDecreaseType
 						|| command instanceof UpDownType) {
+					// Process up/down (may not be supported by all models)
 					if (command == IncreaseDecreaseType.INCREASE
 							|| command == UpDownType.UP) {
 						proxy.volumeUp();
@@ -194,7 +235,12 @@ public class SharpTvBinding extends
 							|| command == UpDownType.DOWN) {
 						proxy.volumeDown();
 					}
+				} else {
+					// Set value from 0 to 100 percent
+					float percent = .01f * Integer.parseInt(command.toString());
+					proxy.setVolume((int) (MAX_VOLUME * percent));
 				}
+				eventPublisher.postUpdate(itemName, new PercentType(0));
 			}
 		} catch (IOException e) {
 			logger.error("Could not communicate with Sharp TV", e);
@@ -202,11 +248,6 @@ public class SharpTvBinding extends
 			logger.error("Error processing command '" + command
 					+ "' for item '" + itemName + "'", t);
 		}
-
-		// Sharp TV has no way of retriving state from the device
-		// To keep the GUI true to that fact, set item state to
-		// UnDef after updating it.
-		eventPublisher.postUpdate(itemName, UnDefType.UNDEF);
 	}
 
 	private SharpTvBindingConfig getConfigForItemName(String itemName) {
@@ -232,7 +273,8 @@ public class SharpTvBinding extends
 				while (keys.hasMoreElements()) {
 					String key = keys.nextElement();
 					if (key.endsWith(CONFIG_KEY_HOST)) {
-						// found a host key. parse UID and associate with the rest
+						// found a host key. parse UID and associate with the
+						// rest
 						// of the keys for this device
 						String host = (String) config.get(key);
 						int separatorIdx = key.indexOf('.');
@@ -241,7 +283,8 @@ public class SharpTvBinding extends
 						if (separatorIdx == -1) {
 							// format: sharptv:host => use default UID
 							uid = DEFAULT_DEVICE_UID;
-							String portStr = (String) config.get(CONFIG_KEY_PORT);
+							String portStr = (String) config
+									.get(CONFIG_KEY_PORT);
 							port = portStr != null ? Integer.parseInt(portStr)
 									: null;
 							user = (String) config.get(CONFIG_KEY_USER);
@@ -254,14 +297,17 @@ public class SharpTvBinding extends
 									+ CONFIG_KEY_PORT);
 							port = portStr != null ? Integer.parseInt(portStr)
 									: null;
-							user = (String) config.get(keyPrefix + CONFIG_KEY_USER);
-							pass = (String) config.get(keyPrefix + CONFIG_KEY_PASS);
+							user = (String) config.get(keyPrefix
+									+ CONFIG_KEY_USER);
+							pass = (String) config.get(keyPrefix
+									+ CONFIG_KEY_PASS);
 						}
 						if (port == null || user == null || pass == null) {
-							String passHidden = pass != null ? "(hidden)" : null;
+							String passHidden = pass != null ? "(hidden)"
+									: null;
 							logger.error("Invalid configuration: host=" + host
-									+ " port=" + port + " user=" + user + " pass="
-									+ passHidden);
+									+ " port=" + port + " user=" + user
+									+ " pass=" + passHidden);
 						} else {
 							// proxy is stateless. keep them in a map in the
 							// binding.
@@ -279,12 +325,12 @@ public class SharpTvBinding extends
 
 	@Override
 	public void activate() {
-
+		logger.debug(BINDING_NAME + " activated");
 	}
 
 	@Override
 	public void deactivate() {
-
+		logger.debug(BINDING_NAME + " deactivated");
 	}
 
 }
