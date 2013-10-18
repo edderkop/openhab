@@ -41,6 +41,11 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+/**
+ * Radio Thermostat proxy used to control a Radio Thermostat using HTTP/Json
+ * 
+ * @author Eric Thill
+ */
 public class RadioThermostatProxy {
 
 	private final String host;
