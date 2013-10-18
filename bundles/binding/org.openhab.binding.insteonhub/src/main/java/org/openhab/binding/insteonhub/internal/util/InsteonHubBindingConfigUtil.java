@@ -26,56 +26,46 @@
  * (EPL), the licensors of this Program grant you additional permission
  * to convey the resulting work.
  */
-package org.openhab.binding.insteonhub;
+package org.openhab.binding.insteonhub.internal.util;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
+import org.openhab.binding.insteonhub.InsteonHubBindingProvider;
 import org.openhab.binding.insteonhub.internal.InsteonHubBindingConfig;
-import org.openhab.core.binding.BindingProvider;
 
-/**
- * Insteon Hub BindingProvider interface
- * 
- * @author Eric Thill
- * @since 1.4.0
- */
-public interface InsteonHubBindingProvider extends BindingProvider {
+public class InsteonHubBindingConfigUtil {
 
-	/**
-	 * Returns the openhab Item Configuration identified by {@code itemName}.
-	 * 
-	 * @param itemName
-	 *            the name of the Item.
-	 * @return The Item Configuration identified by {@code itemName}.
-	 * 
-	 */
-	public InsteonHubBindingConfig getConfigForItem(String itemName);
+	public static Collection<InsteonHubBindingConfig> getConfigsForHub(
+			Collection<InsteonHubBindingProvider> providers, String hubId) {
+		Map<String, InsteonHubBindingConfig> items = new HashMap<String, InsteonHubBindingConfig>();
+		for (InsteonHubBindingProvider provider : providers) {
+			provider.getConfigsForHub(hubId, items);
+		}
+		return items.values();
+	}
 
-	/**
-	 * Gets all of the configurations registered to a particular hub identified
-	 * by {@code hubId}
-	 * 
-	 * @param hubId
-	 *            the hub ID from the configuration
-	 * @param items
-	 *            the map of configurations to populate. key=itemName,
-	 *            value=configuration
-	 */
-	public void getConfigsForHub(String hubId,
-			Map<String, InsteonHubBindingConfig> configs);
+	public static InsteonHubBindingConfig getConfigForItem(
+			Collection<InsteonHubBindingProvider> providers, String itemName) {
+		for (InsteonHubBindingProvider provider : providers) {
+			if (provider.getConfigForItem(itemName) != null) {
+				return provider.getConfigForItem(itemName);
+			}
+		}
+		return null;
+	}
 
-	/**
-	 * Get the config identified by the {@code device} on the hub identified by
-	 * {@code hubId}
-	 * 
-	 * @param hubId
-	 *            The hubId
-	 * @param device
-	 *            The Insteon Device
-	 * @return the configuration associated with this hubId/device combo. null
-	 *         if it did not exist.
-	 */
-	public InsteonHubBindingConfig getConfigForHubDevice(String hubId,
-			String device);
-
+	public static InsteonHubBindingConfig getConfigForHubDevice(
+			Collection<InsteonHubBindingProvider> providers, String hubId,
+			String device) {
+		for (InsteonHubBindingProvider provider : providers) {
+			InsteonHubBindingConfig config = provider.getConfigForHubDevice(
+					hubId, device);
+			if (config != null) {
+				return config;
+			}
+		}
+		return null;
+	}
 }
