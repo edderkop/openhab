@@ -48,6 +48,11 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
+/**
+ * Yamaha Receiver Proxy used to control a yamaha receiver with HTTP/XML
+ * 
+ * @author Eric Thill
+ */
 public class YamahaReceiverProxy {
 
 	public static final int VOLUME_MIN = -80;
