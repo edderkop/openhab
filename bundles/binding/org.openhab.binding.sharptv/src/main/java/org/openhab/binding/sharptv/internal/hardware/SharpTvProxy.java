@@ -33,6 +33,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
+/**
+ * Sharp TV Proxy used to control a Sharp TV using TCP
+ * 
+ * @author Eric Thill
+ */
 public class SharpTvProxy {
 
 	private static final int BUTTON_VOL_DOWN = 32;
