@@ -77,6 +77,7 @@
     <module>org.openhab.binding.insteonhub</module>
     <module>org.openhab.binding.radiothermostat</module>
     <module>org.openhab.binding.sharptv</module>
+    <module>org.openhab.binding.yamahareceiver</module>
   </modules>
 
 </project>
