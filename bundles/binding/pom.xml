@@ -74,10 +74,6 @@
     <module>org.openhab.binding.nikobus.test</module>
     <module>org.openhab.binding.enocean</module>
     <module>org.openhab.binding.enocean.test</module>
-    <module>org.openhab.binding.insteonhub</module>
-    <module>org.openhab.binding.radiothermostat</module>
-    <module>org.openhab.binding.sharptv</module>
-    <module>org.openhab.binding.yamahareceiver</module>
   </modules>
 
 </project>
