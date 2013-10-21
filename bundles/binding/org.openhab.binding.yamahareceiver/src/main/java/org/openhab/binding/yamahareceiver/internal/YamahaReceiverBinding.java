@@ -71,7 +71,6 @@ public class YamahaReceiverBinding extends
 
 	private static final float VOLUME_DB_MIN = -80f;
 	private static final float VOLUME_DB_MAX = 16f;
-	private static final String BINDING_NAME = "YamahaReceiverBinding";
 
 	private static final Logger logger = LoggerFactory
 			.getLogger(YamahaReceiverBinding.class);
@@ -96,8 +95,7 @@ public class YamahaReceiverBinding extends
 	protected void execute() {
 		try {
 			// Iterate through all proxies
-			for (Map.Entry<String, YamahaReceiverProxy> entry : proxies
-					.entrySet()) {
+			for (Map.Entry<String, YamahaReceiverProxy> entry : proxies.entrySet()) {
 				String deviceUid = entry.getKey();
 				YamahaReceiverProxy receiverProxy = entry.getValue();
 				sendUpdates(receiverProxy, deviceUid);
@@ -129,8 +127,8 @@ public class YamahaReceiverBinding extends
 			sendUpdate(configs, BindingType.mute, muteUpdate);
 			sendUpdate(configs, BindingType.input, inputUpdate);
 			sendUpdate(configs, BindingType.surroundProgram, surroundUpdate);
-			sendUpdate(configs, BindingType.volumePercent, updateVolumePercent);
-			sendUpdate(configs, BindingType.volumeDb, updateVolumeDb);
+			sendUpdate(configs, BindingType.volumePercent, updateVolumeDb);
+			sendUpdate(configs, BindingType.volumeDb, updateVolumePercent);
 		} catch (IOException e) {
 			logger.warn("Cannot communicate with " + receiverProxy.getHost());
 		}
@@ -179,12 +177,6 @@ public class YamahaReceiverBinding extends
 			return;
 		}
 
-		if (logger.isDebugEnabled()) {
-			logger.debug(BINDING_NAME + " processing command '" + command
-					+ "' of type '" + command.getClass().getSimpleName()
-					+ "' for item '" + itemName + "'");
-		}
-
 		try {
 			BindingType type = config.getBindingType();
 			if (type == BindingType.power) {
@@ -204,11 +196,7 @@ public class YamahaReceiverBinding extends
 					} else {
 						adjAmt = -.5f;
 					}
-					float newDb = db + adjAmt;
-					proxy.setVolume(newDb);
-					// send new value as update
-					State newState = new DecimalType(newDb);
-					eventPublisher.postUpdate(itemName, newState);
+					proxy.setVolume(db + adjAmt);
 				} else if (command instanceof PercentType) {
 					// set dB from percent
 					byte percent = ((PercentType) command).byteValue();
@@ -219,7 +207,7 @@ public class YamahaReceiverBinding extends
 					float db = Float.parseFloat(command.toString());
 					proxy.setVolume(db);
 				}
-				// Volume updates multiple values => send update now
+				// Changing the volume updates percent and db - Send state now
 				sendUpdates(proxy, config.getDeviceUid());
 			} else if (type == BindingType.mute) {
 				if (command instanceof OnOffType) {
@@ -263,13 +251,12 @@ public class YamahaReceiverBinding extends
 
 	@Override
 	protected void internalReceiveUpdate(String itemName, State newState) {
-		// ignore
+		logger.debug("internalReceiveCommand() is called!");
 	}
 
 	@Override
 	public void updated(Dictionary<String, ?> config)
 			throws ConfigurationException {
-		logger.debug(BINDING_NAME + " updated");
 		try {
 			// Process device configuration
 			if (config != null) {
@@ -287,10 +274,9 @@ public class YamahaReceiverBinding extends
 						String host = (String) config.get(key);
 						int separatorIdx = key.indexOf('.');
 						// no uid => one device => use default UID
-						String uid = separatorIdx == -1 ? DEFAULT_DEVICE_UID
-								: key.substring(0, separatorIdx);
-						// proxy is stateless. keep them in a map in the
-						// binding.
+						String uid = separatorIdx == -1 ? DEFAULT_DEVICE_UID : key
+								.substring(0, separatorIdx);
+						// proxy is stateless. keep them in a map in the binding.
 						proxies.put(uid, new YamahaReceiverProxy(host));
 					}
 				}
@@ -303,12 +289,12 @@ public class YamahaReceiverBinding extends
 
 	@Override
 	public void activate() {
-		logger.debug(BINDING_NAME + " activated");
+
 	}
 
 	@Override
 	public void deactivate() {
-		logger.debug(BINDING_NAME + " deactivated");
+
 	}
 
 }
