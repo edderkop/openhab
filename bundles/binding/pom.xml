@@ -75,6 +75,7 @@
     <module>org.openhab.binding.enocean</module>
     <module>org.openhab.binding.enocean.test</module>
     <module>org.openhab.binding.insteonhub</module>
+    <module>org.openhab.binding.radiothermostat</module>
   </modules>
 
 </project>
