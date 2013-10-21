@@ -64,10 +64,8 @@ public class SharpTvProxy {
 
 	public void setInput(int input) throws IOException {
 		if (input == 0) {
-			// Input 0 is always TV on Sharp TV's and uses ITVD command
 			sendCommands("ITVD0");
 		} else {
-			// Other inputs use IAVD command
 			sendCommands("IAVD" + input);
 		}
 	}
@@ -135,12 +133,12 @@ public class SharpTvProxy {
 	public void setChannelDigitalCableTwoPart(int u, int l) throws IOException {
 		sendCommands("DC2U" + u, "DC2L" + l);
 	}
-
+	
 	public void setChannelDigitalCableOnePart(int channel) throws IOException {
-		if (channel < 10000) {
-			sendCommands("DC10" + channel);
+		if(channel < 10000) {
+			sendCommands("DC10"+channel);
 		} else {
-			sendCommands("DC11" + (10000 - channel));
+			sendCommands("DC11"+(10000-channel));
 		}
 	}
 
