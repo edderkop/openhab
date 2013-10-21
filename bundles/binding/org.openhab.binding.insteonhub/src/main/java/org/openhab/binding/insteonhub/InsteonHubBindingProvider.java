@@ -28,6 +28,7 @@
  */
 package org.openhab.binding.insteonhub;
 
+
 import java.util.Map;
 
 import org.openhab.binding.insteonhub.internal.InsteonHubBindingConfig;
@@ -42,18 +43,18 @@ import org.openhab.core.binding.BindingProvider;
 public interface InsteonHubBindingProvider extends BindingProvider {
 
 	/**
-	 * Returns the openhab Item Configuration identified by {@code itemName}.
+	 * Returns the Item Configuration identified by {@code itemName}.
 	 * 
 	 * @param itemName
 	 *            the name of the Item.
 	 * @return The Item Configuration identified by {@code itemName}.
 	 * 
 	 */
-	public InsteonHubBindingConfig getConfigForItem(String itemName);
+	public InsteonHubBindingConfig getItemConfig(String itemName);
 
 	/**
-	 * Gets all of the configurations registered to a particular hub identified
-	 * by {@code hubId}
+	 * Gets all of the configurations registered to a particular device
+	 * identified by {@code deviceUid}
 	 * 
 	 * @param hubId
 	 *            the hub ID from the configuration
@@ -61,21 +62,7 @@ public interface InsteonHubBindingProvider extends BindingProvider {
 	 *            the map of configurations to populate. key=itemName,
 	 *            value=configuration
 	 */
-	public void getConfigsForHub(String hubId,
+	public void getHubConfigs(String hubId,
 			Map<String, InsteonHubBindingConfig> configs);
-
-	/**
-	 * Get the config identified by the {@code device} on the hub identified by
-	 * {@code hubId}
-	 * 
-	 * @param hubId
-	 *            The hubId
-	 * @param device
-	 *            The Insteon Device
-	 * @return the configuration associated with this hubId/device combo. null
-	 *         if it did not exist.
-	 */
-	public InsteonHubBindingConfig getConfigForHubDevice(String hubId,
-			String device);
 
 }

@@ -59,7 +59,7 @@ public class InsteonHubGenericBindingProvider extends
 	@Override
 	public void validateItemType(Item item, String bindingConfig)
 			throws BindingConfigParseException {
-
+		
 	}
 
 	/**
@@ -77,8 +77,8 @@ public class InsteonHubGenericBindingProvider extends
 			String bindingType = props
 					.get(InsteonHubBindingConfig.KEY_BINDING_TYPE);
 			// create configuration
-			InsteonHubBindingConfig config = new InsteonHubBindingConfig(hubid,
-					device, bindingType, item.getName());
+			InsteonHubBindingConfig config = new InsteonHubBindingConfig(
+					hubid, device, bindingType, item.getName());
 			// add binding configuration
 			addBindingConfig(item, config);
 		}
@@ -98,32 +98,18 @@ public class InsteonHubGenericBindingProvider extends
 	}
 
 	@Override
-	public InsteonHubBindingConfig getConfigForItem(String itemName) {
+	public InsteonHubBindingConfig getItemConfig(String itemName) {
 		return ((InsteonHubBindingConfig) bindingConfigs.get(itemName));
 	}
 
 	@Override
-	public void getConfigsForHub(String hubId,
-			Map<String, InsteonHubBindingConfig> configs) {
+	public void getHubConfigs(String hubId, Map<String, InsteonHubBindingConfig> configs) {
 		for (BindingConfig config : bindingConfigs.values()) {
 			InsteonHubBindingConfig insteonConfig = (InsteonHubBindingConfig) config;
 			if (insteonConfig.getHubId().equals(hubId)) {
 				configs.put(insteonConfig.getItemName(), insteonConfig);
 			}
 		}
-	}
-
-	@Override
-	public InsteonHubBindingConfig getConfigForHubDevice(String hubId,
-			String device) {
-		for (BindingConfig config : bindingConfigs.values()) {
-			InsteonHubBindingConfig insteonConfig = (InsteonHubBindingConfig) config;
-			if (insteonConfig.getHubId().equals(hubId)
-					&& insteonConfig.getDevice().equals(device)) {
-				return insteonConfig;
-			}
-		}
-		return null;
 	}
 
 }
