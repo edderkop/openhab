@@ -6,7 +6,7 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  */
-package org.openhab.binding.insteonhub.internal;
+package org.openhab.binding.insteonhub.internal.proxy;
 
 import java.util.Dictionary;
 import java.util.Enumeration;
@@ -14,8 +14,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
-import org.openhab.binding.insteonhub.internal.hardware.InsteonHubProxy;
-import org.openhab.binding.insteonhub.internal.hardware.api.serial.InsteonHubSerialProxy;
+import org.openhab.binding.insteonhub.internal.InsteonHubBinding;
+import org.openhab.binding.insteonhub.internal.bus.InsteonHubBus;
+import org.openhab.binding.insteonhub.internal.proxy.serial.InsteonHubSerialProxy;
 
 /**
  * Creates InsteonHubProxy instances
@@ -29,7 +30,7 @@ public class InsteonHubProxyFactory {
 	public static final String CONFIG_KEY_PORT = "port";
 
 	public static Map<String, InsteonHubProxy> createInstances(
-			Dictionary<String, ?> config) {
+			Dictionary<String, ?> config, InsteonHubBus bus) {
 		Map<String, InsteonHubProxy> proxies = new HashMap<String, InsteonHubProxy>();
 		// parse all configured receivers
 		// ( insteonhub:<hubid>.host=10.0.0.2 )
@@ -57,6 +58,7 @@ public class InsteonHubProxyFactory {
 								keyPrefix + CONFIG_KEY_PORT).toString());
 				// Create proxy, and add it to map
 				InsteonHubProxy proxy = new InsteonHubSerialProxy(host, port);
+				proxy.setBus(bus);
 				proxies.put(hubId, proxy);
 			}
 		}

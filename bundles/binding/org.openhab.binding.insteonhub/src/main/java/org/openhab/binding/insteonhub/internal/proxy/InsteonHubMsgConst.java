@@ -6,7 +6,7 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  */
-package org.openhab.binding.insteonhub.internal.hardware;
+package org.openhab.binding.insteonhub.internal.proxy;
 
 import java.util.Collections;
 import java.util.HashMap;

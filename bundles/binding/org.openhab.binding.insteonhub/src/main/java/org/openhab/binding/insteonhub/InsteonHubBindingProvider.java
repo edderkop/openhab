@@ -8,10 +8,9 @@
  */
 package org.openhab.binding.insteonhub;
 
-import java.util.Set;
+import java.util.Collection;
 
 import org.openhab.binding.insteonhub.internal.InsteonHubBindingConfig;
-import org.openhab.binding.insteonhub.internal.InsteonHubBindingDeviceInfo;
 import org.openhab.core.binding.BindingProvider;
 
 /**
@@ -23,29 +22,26 @@ import org.openhab.core.binding.BindingProvider;
 public interface InsteonHubBindingProvider extends BindingProvider {
 
 	/**
-	 * Returns the openhab Item Configuration identified by {@code itemName}.
+	 * Gets the configuration associated with the given {@code itemName}
 	 * 
-	 * @param itemName
-	 *            the name of the Item.
-	 * @return The Item Configuration identified by {@code itemName}
-	 * 
+	 * @param itemName The Item Name
+	 * @return The InsteonHubBindingConfig, or null if it didn't exist
 	 */
-	public InsteonHubBindingConfig getItemConfig(String itemName);
-
+	InsteonHubBindingConfig getItemConfig(String itemName);
+	
 	/**
-	 * Get all hubId+devices
+	 * Gets the configuration associated with the given {@code deviceId}
 	 * 
-	 * return Set of devices
+	 * @param deviceId The Device ID
+	 * @return The InsteonHubBindingConfig, or null if it didn't exist
 	 */
-	public Set<InsteonHubBindingDeviceInfo> getConfiguredDevices();
-
+	InsteonHubBindingConfig getDeviceConfig(int deviceId);
+	
 	/**
-	 * Returns the openhab Item Names configured for {@code deviceInfo}
+	 * Gets all currently configured binding configs
 	 * 
-	 * @param deviceInfo
-	 *            device info (hubId+deviceId)
-	 * return Set of Item Names
+	 * @return A collection of all configs
 	 */
-	public Set<String> getDeviceItemNames(InsteonHubBindingDeviceInfo deviceInfo);
+	Collection<InsteonHubBindingConfig> getConfigs();
 
 }

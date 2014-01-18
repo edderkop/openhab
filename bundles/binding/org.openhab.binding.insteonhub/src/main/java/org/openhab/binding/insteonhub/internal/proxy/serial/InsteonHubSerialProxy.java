@@ -6,15 +6,19 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  */
-package org.openhab.binding.insteonhub.internal.hardware.api.serial;
+package org.openhab.binding.insteonhub.internal.proxy.serial;
 
 import java.io.IOException;
 import java.net.Socket;
 
-import org.openhab.binding.insteonhub.internal.hardware.InsteonHubAdjustmentType;
-import org.openhab.binding.insteonhub.internal.hardware.InsteonHubProxy;
-import org.openhab.binding.insteonhub.internal.hardware.InsteonHubProxyListener;
-import org.openhab.binding.insteonhub.internal.util.InsteonHubBindingLogUtil;
+import org.openhab.binding.insteonhub.internal.bus.InsteonHubBus;
+import org.openhab.binding.insteonhub.internal.bus.InsteonHubBusListener;
+import org.openhab.binding.insteonhub.internal.command.InsteonHubCommand;
+import org.openhab.binding.insteonhub.internal.proxy.InsteonHubProxy;
+import org.openhab.binding.insteonhub.internal.update.InsteonHubUpdate;
+import org.openhab.binding.insteonhub.internal.update.InsteonHubUpdateFactory;
+import org.openhab.core.types.Command;
+import org.openhab.core.types.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,17 +40,15 @@ public class InsteonHubSerialProxy implements InsteonHubProxy {
 	private static final long RETRY_INTERVAL_SECONDS = 30;
 	private static final long MILLIS_PER_SECOND = 1000;
 
-	private final InsteonHubSerialMessageBuilder msgBuilder = InsteonHubSerialMessageBuilder
-			.getInstance();
-	private final InsteonHubMessagePool commandPool = new InsteonHubMessagePool(
-			32, InsteonHubSerialMessageBuilder.STD_MSG_SIZE);
+	private final InsteonHubUpdateFactory updateFactory = new InsteonHubUpdateFactory();
 	private final InsteonHubSerialTransport transport;
 	private final String host;
 	private final int port;
-
+	
 	private volatile Socket socket;
 	private volatile Connecter connecter;
-
+	private InsteonHubBus bus;
+	
 	public InsteonHubSerialProxy(String host) {
 		this(host, DEFAULT_PORT);
 	}
@@ -54,12 +56,13 @@ public class InsteonHubSerialProxy implements InsteonHubProxy {
 	public InsteonHubSerialProxy(String host, int port) {
 		this.host = host;
 		this.port = port;
-		transport = new InsteonHubSerialTransport(this);
+		transport = new InsteonHubSerialTransport(transportCallbacks, getConnectionString());
 	}
-
+	
 	@Override
-	public String getConnectionString() {
-		return host + ":" + port;
+	public void setBus(InsteonHubBus bus) {
+		this.bus = bus;
+		bus.addListener(busListener);
 	}
 
 	@Override
@@ -77,6 +80,10 @@ public class InsteonHubSerialProxy implements InsteonHubProxy {
 			new Thread(connecter, getConnectionString() + " connecter").start();
 		}
 	}
+	
+	private String getConnectionString() {
+		return host + ":" + port;
+	}
 
 	@Override
 	public synchronized void stop() {
@@ -92,60 +99,56 @@ public class InsteonHubSerialProxy implements InsteonHubProxy {
 			// ignore
 		}
 	}
+	
+	private final InsteonHubBusListener busListener = new InsteonHubBusListener() {
 
-	@Override
-	public void setDevicePower(String device, boolean power) {
-		byte[] msgBuffer = commandPool.checkout();
-		msgBuilder.buildFastPowerMessage(msgBuffer, device, power);
-		enqueueCommand(msgBuffer);
-	}
+		@Override
+		public void onSendOpenhabCommand(int deviceId, Command command) {
+			// ignore
+		}
 
-	@Override
-	public void setDeviceLevel(String device, int level) {
-		byte[] msgBuffer = commandPool.checkout();
-		msgBuilder.buildSetLevelMessage(msgBuffer, device, level);
-		enqueueCommand(msgBuffer);
-	}
+		@Override
+		public void onPostOpenhabUpdate(int deviceId, State update) {
+			// ignore
+		}
 
-	@Override
-	public void startDeviceAdjustment(String device,
-			InsteonHubAdjustmentType adjustmentType) {
-		byte[] msgBuffer = commandPool.checkout();
-		msgBuilder.buildStartDimBrtMessage(msgBuffer, device, adjustmentType);
-		enqueueCommand(msgBuffer);
-	}
+		@Override
+		public void onSendInsteonCommand(int deviceId, InsteonHubCommand command) {
+			sendCommandToHub(command);
+		}
 
-	@Override
-	public void stopDeviceAdjustment(String device) {
-		byte[] msgBuffer = commandPool.checkout();
-		msgBuilder.buildStopDimBrtMessage(msgBuffer, device);
-		enqueueCommand(msgBuffer);
-	}
-
-	@Override
-	public void requestDeviceLevel(String device) {
-		byte[] msgBuffer = commandPool.checkout();
-		msgBuilder.buildRequestLevelMessage(msgBuffer, device);
-		enqueueCommand(msgBuffer);
-	}
-
-	private void enqueueCommand(byte[] msgBuffer) {
+		@Override
+		public void onPostInsteonUpdate(int deviceId, InsteonHubUpdate update) {
+			// proxy's transport will be posting this
+		}
+		
+	};
+	
+	private void sendCommandToHub(InsteonHubCommand command) {
 		if (!transport.isStarted()) {
 			logger.info("Not sending message - Not connected to Hub");
 			return;
 		}
-		transport.enqueueCommand(msgBuffer);
+		transport.enqueueCommand(command.buildSerialMessage());
 	}
 
-	@Override
-	public void addListener(InsteonHubProxyListener listener) {
-		transport.addListener(listener);
-	}
-
-	@Override
-	public void removeListener(InsteonHubProxyListener listener) {
-		transport.removeListener(listener);
-	}
+	private final InsteonHubSerialTransportCallbacks transportCallbacks = new InsteonHubSerialTransportCallbacks() {
+		
+		@Override
+		public void onReceived(byte[] msg) {
+			InsteonHubUpdate update = updateFactory.createUpdate(msg);
+			if(update != null) {
+				bus.postInsteonUpdate(update.getDeviceId(), update);
+			}
+		}
+		
+		@Override
+		public void onDisconnect() {
+			logger.error("Insteon Hub " + getConnectionString() + " Connection lost");
+			reconnect();
+		}
+	};
+	
 
 	private class Connecter implements Runnable {
 		@Override
@@ -163,9 +166,7 @@ public class InsteonHubSerialProxy implements InsteonHubProxy {
 					return;
 				} catch (IOException e) {
 					// connection failure => log and retry in a bit
-					InsteonHubBindingLogUtil.logCommunicationFailure(logger,
-							InsteonHubSerialProxy.this, e);
-					logger.info("Will retry connection in "
+					logger.warn("Could not connect to Insteon Hub. Will retry connection in "
 							+ RETRY_INTERVAL_SECONDS + " seconds...");
 					try {
 						Thread.sleep(RETRY_INTERVAL_SECONDS * MILLIS_PER_SECOND);
@@ -176,5 +177,5 @@ public class InsteonHubSerialProxy implements InsteonHubProxy {
 			}
 		}
 	}
-
+	
 }

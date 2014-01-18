@@ -6,18 +6,19 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  */
-package org.openhab.binding.insteonhub.internal.hardware.api.serial;
+package org.openhab.binding.insteonhub.internal.update;
 
-import org.openhab.binding.insteonhub.internal.hardware.InsteonHubMsgConst;
+import org.openhab.binding.insteonhub.internal.proxy.InsteonHubMsgConst;
 import org.openhab.binding.insteonhub.internal.util.InsteonHubByteUtil;
 
 /**
- * Parses Insteon Hub Standard Message flags from a byte bitset
+ * Helper class that parses the {@link InsteonHubRecStdUpdate} 0x50's flags
+ * bitset.
  * 
  * @author Eric Thill
- * @since 1.4.0
+ * @since 1.4.1
  */
-class InsteonHubStdMsgFlags {
+public class InsteonHubStdMsgFlags {
 
 	private final boolean ack;
 	private final boolean broadcast;
@@ -56,5 +57,5 @@ class InsteonHubStdMsgFlags {
 		return "InsteonHubStdMsgFlags [ack=" + ack + ", broadcast=" + broadcast
 				+ ", extended=" + extended + ", group=" + group + "]";
 	}
-	
+
 }

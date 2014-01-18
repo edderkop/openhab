@@ -11,6 +11,8 @@ package org.openhab.binding.insteonhub.internal;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.openhab.binding.insteonhub.internal.device.InsteonHubDeviceType;
+import org.openhab.binding.insteonhub.internal.util.InsteonHubByteUtil;
 import org.openhab.core.binding.BindingConfig;
 
 /**
@@ -29,18 +31,6 @@ public class InsteonHubBindingConfig implements BindingConfig {
 	public static final String KEY_OFF_VALUE = "offValue";
 	public static final String KEY_OPEN_VALUE = "openValue";
 	public static final String KEY_CLOSED_VALUE = "closedValue";
-
-	public enum BindingType {
-		DIMMER, SWITCH, INPUT_UBYTE, INPUT_PERCENT, INPUT_ON_OFF, INPUT_OPEN_CLOSED;
-		public static BindingType parseIgnoreCase(String str) {
-			for (BindingType type : values()) {
-				if (type.toString().equalsIgnoreCase(str)) {
-					return type;
-				}
-			}
-			return null;
-		}
-	}
 
 	public static InsteonHubBindingConfig parse(String itemName,
 			String configStr) {
@@ -67,30 +57,14 @@ public class InsteonHubBindingConfig implements BindingConfig {
 			throw new IllegalArgumentException(KEY_BINDING_TYPE
 					+ " is not defined in " + configMap);
 		}
-		BindingType bindingType = BindingType.parseIgnoreCase(bindingTypeStr);
+		InsteonHubDeviceType bindingType = InsteonHubDeviceType.parseIgnoreCase(bindingTypeStr);
 		if (bindingType == null) {
 			throw new IllegalArgumentException("Unknown value for "
 					+ KEY_BINDING_TYPE + " '" + bindingTypeStr + "'");
 		}
 
-		// parse all optional keys
-		String onValueStr = configMap.get(KEY_ON_VALUE);
-		Integer onValue = onValueStr == null ? null : Integer
-				.parseInt(onValueStr);
-		String offValueStr = configMap.get(KEY_OFF_VALUE);
-		Integer offValue = offValueStr == null ? null : Integer
-				.parseInt(offValueStr);
-		String openValueStr = configMap.get(KEY_OPEN_VALUE);
-		Integer openValue = openValueStr == null ? null : Integer
-				.parseInt(openValueStr);
-		String closedValueStr = configMap.get(KEY_CLOSED_VALUE);
-		Integer closedValue = closedValueStr == null ? null : Integer
-				.parseInt(closedValueStr);
-
-		InsteonHubBindingDeviceInfo deviceInfo = new InsteonHubBindingDeviceInfo(
-				hubId, device);
-		return new InsteonHubBindingConfig(itemName, deviceInfo, bindingType,
-				onValue, offValue, openValue, closedValue);
+		int deviceId = InsteonHubByteUtil.deviceIdStringToInt(device);
+		return new InsteonHubBindingConfig(itemName, hubId, deviceId, bindingType);
 	}
 
 	private static Map<String, String> stringToMap(String str) {
@@ -115,52 +89,33 @@ public class InsteonHubBindingConfig implements BindingConfig {
 	}
 
 	private final String itemName;
-	private final InsteonHubBindingDeviceInfo deviceInfo;
-	private final BindingType bindingType;
-	private final Integer onValue;
-	private final Integer offValue;
-	private final Integer openValue;
-	private final Integer closedValue;
+	private final String hubId;
+	private final int deviceId;
+	private final InsteonHubDeviceType bindingType;
 
 	public InsteonHubBindingConfig(String itemName,
-			InsteonHubBindingDeviceInfo deviceInfo, BindingType bindingType,
-			Integer onValue, Integer offValue, Integer openValue,
-			Integer closedValue) {
+			String hubId, int deviceId, InsteonHubDeviceType bindingType) {
 		this.itemName = itemName;
-		this.deviceInfo = deviceInfo;
+		this.hubId = hubId;
+		this.deviceId = deviceId;
 		this.bindingType = bindingType;
-		this.onValue = onValue;
-		this.offValue = offValue;
-		this.openValue = openValue;
-		this.closedValue = closedValue;
 	}
 
 	public String getItemName() {
 		return itemName;
 	}
 
-	public InsteonHubBindingDeviceInfo getDeviceInfo() {
-		return deviceInfo;
+	public String getHubId() {
+		return hubId;
+	}
+	
+	public int getDeviceId() {
+		return deviceId;
 	}
 
-	public BindingType getBindingType() {
+	public InsteonHubDeviceType getBindingType() {
 		return bindingType;
 	}
-
-	public Integer getOnValue() {
-		return onValue;
-	}
-
-	public Integer getOffValue() {
-		return offValue;
-	}
-
-	public Integer getOpenValue() {
-		return openValue;
-	}
-
-	public Integer getClosedValue() {
-		return closedValue;
-	}
+	
 
 }
