@@ -45,10 +45,12 @@ public class InsteonHubRecStdUpdate extends InsteonHubUpdate {
 
 	@Override
 	public String toString() {
-		return "InsteonHubRecStdMessage [flags=" + flags + ", cmd1=" + InsteonHubByteUtil.byteToHex(cmd1)
-				+ ", cmd2=" + InsteonHubByteUtil.byteToHex(cmd2) + ", getDeviceId()="
+		return "InsteonHubRecStdMessage [flags=" + flags + ", cmd1="
+				+ InsteonHubByteUtil.byteToHex(cmd1) + ", cmd2="
+				+ InsteonHubByteUtil.byteToHex(cmd2) + ", getDeviceId()="
 				+ InsteonHubByteUtil.deviceIdIntToString(getDeviceId())
-				+ ", getCode()=" + getCode() + "]";
+				+ ", getCode()=" + InsteonHubByteUtil.byteToHex(getCode())
+				+ "]";
 	}
 
 }

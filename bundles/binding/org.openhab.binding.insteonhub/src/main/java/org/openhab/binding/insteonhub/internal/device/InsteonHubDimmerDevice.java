@@ -105,7 +105,7 @@ public class InsteonHubDimmerDevice extends InsteonHubDevice {
 	protected void processInsteonUpdate(InsteonHubUpdate msg) {
 		if (msg.getCode() == InsteonHubMsgConst.REC_CODE_INSTEON_STD_MSG) {
 			InsteonHubRecStdUpdate stdMsg = (InsteonHubRecStdUpdate) msg;
-			if(stdMsg.getCmd1() == 0 && stdMsg.getFlags().isAck()) {
+			if(stdMsg.getFlags().isAck()) {
 				// level response
 				int ubyte = stdMsg.getCmd2();
 				if (ubyte == 0) {
@@ -132,11 +132,8 @@ public class InsteonHubDimmerDevice extends InsteonHubDevice {
 					// off
 					postOpenhabUpdate(OnOffType.OFF);
 					break;
-				case InsteonHubMsgConst.CMD1_ON_FAST:
-					// on
-					postOpenhabUpdate(OnOffType.ON);
-					break;
 				case InsteonHubMsgConst.CMD1_ON:
+				case InsteonHubMsgConst.CMD1_ON_FAST:
 					// level
 					int percent = (int)(100 * (stdMsg.getCmd2() / 255f));
 					postOpenhabUpdate(new PercentType(percent));

@@ -10,6 +10,7 @@ package org.openhab.binding.insteonhub.internal.device;
 
 import org.openhab.binding.insteonhub.internal.command.InsteonHubCommand;
 import org.openhab.binding.insteonhub.internal.command.InsteonHubCommandType;
+import org.openhab.binding.insteonhub.internal.command.InsteonHubFastOnCommand;
 import org.openhab.binding.insteonhub.internal.proxy.InsteonHubMsgConst;
 import org.openhab.binding.insteonhub.internal.update.InsteonHubRecStdUpdate;
 import org.openhab.binding.insteonhub.internal.update.InsteonHubUpdate;
@@ -35,11 +36,10 @@ public class InsteonHubSwitchDevice extends InsteonHubDevice {
 
 	private void setPower(boolean power) {
 		if (power) {
-			sendInsteonCommand(new InsteonHubCommand(getDeviceId(),
-					InsteonHubCommandType.FAST_ON));
+			sendInsteonCommand(new InsteonHubFastOnCommand(getDeviceId(), 255));
 		} else {
 			sendInsteonCommand(new InsteonHubCommand(getDeviceId(),
-					InsteonHubCommandType.FAST_ON));
+					InsteonHubCommandType.FAST_OFF));
 		}
 	}
 
@@ -47,7 +47,7 @@ public class InsteonHubSwitchDevice extends InsteonHubDevice {
 	public void processInsteonUpdate(InsteonHubUpdate msg) {
 		if (msg.getCode() == InsteonHubMsgConst.REC_CODE_INSTEON_STD_MSG) {
 			InsteonHubRecStdUpdate stdMsg = (InsteonHubRecStdUpdate) msg;
-			if(stdMsg.getCmd1() == 0 && stdMsg.getFlags().isAck()) {
+			if(stdMsg.getFlags().isAck()) {
 				// level response
 				// FIXME is this right?
 				int cmd2 = stdMsg.getCmd2();

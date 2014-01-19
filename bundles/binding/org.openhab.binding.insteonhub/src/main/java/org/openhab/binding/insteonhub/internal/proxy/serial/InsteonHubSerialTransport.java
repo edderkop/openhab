@@ -117,6 +117,13 @@ public class InsteonHubSerialTransport {
 						outputStream.write(msg);
 						outputStream.flush();
 					}
+					// FIXME Sleep hack for now: Hub can't handle messages too fast.
+					// I'm assuming its buffers get overrun or something.
+					// Write some synchronization code between sender/receiver?
+					// Sleeping AFTER we send the message so that only messages
+					// in-queue will be delayed.  Usually this won't be too many
+					// and it should help pace the data when we get a big batch update.
+					Thread.sleep(500);
 				}
 			} catch (Throwable t) {
 				// thread will stop
@@ -149,7 +156,7 @@ public class InsteonHubSerialTransport {
 			byte b;
 			while ((b = readByte()) != InsteonHubMsgConst.STX) {
 				if (logger.isInfoEnabled()) {
-					logger.info("Ignoring non STX byte: " + b);
+					logger.info("Ignoring non STX byte: " + InsteonHubByteUtil.byteToHex(b & 0xFF));
 				}
 			}
 			// read command type byte
@@ -158,7 +165,7 @@ public class InsteonHubSerialTransport {
 			// based on command type, figure out number of messages to read
 			Integer msgSize = InsteonHubMsgConst.REC_MSG_SIZES.get(cmd);
 			if (msgSize == null) {
-				logger.info("Received unknown command type '" + cmd + "'");
+				logger.info("Received unknown command type '" + InsteonHubByteUtil.byteToHex(cmd & 0xFF) + "'");
 				return null;
 			}
 			byte[] msg = new byte[msgSize];
@@ -177,11 +184,6 @@ public class InsteonHubSerialTransport {
 					System.arraycopy(extendedBytes, 0, extMsg, msg.length,
 							extendedBytes.length);
 					msg = extMsg;
-				} else if(msg[8] == 0x02) {
-					// TODO what the heck is this?
-					byte[] ignore = new byte[8];
-					fillBuffer(ignore, 0);
-					msg[8] = InsteonHubMsgConst.ACK;
 				}
 			}
 

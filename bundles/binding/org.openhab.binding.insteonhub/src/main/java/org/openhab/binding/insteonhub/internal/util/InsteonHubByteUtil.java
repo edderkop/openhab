@@ -26,7 +26,7 @@ public class InsteonHubByteUtil {
 	}
 	
 	public static boolean checkBit(int value, int idx) {
-		return (value >>> idx) != 0;
+		return ((value >>> idx) & 1) != 0;
 	}
 	
 	public static int deviceIdStringToInt(String idStr) {
